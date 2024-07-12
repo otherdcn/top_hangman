@@ -5,6 +5,8 @@ require "colorize"
 module Hangman
   class Game
     attr_reader :player_one, :player_two, :guesser
+    attr_accessor :word
+
     def initialize(mode = 2, player_one = "Joe", player_two = "Ted")
       @player_one = Human.new(player_one)
       @player_two = if mode == 1
@@ -21,7 +23,9 @@ module Hangman
         puts "\n******************** Round #{round + 1} ********************".black.on_white
         set_guesser(round)
         puts "===> Round: #{round + 1}"
-        puts "===> Guesser: #{guesser.name}"
+        puts "===> Guesser: #{guesser.name}\n\n"
+
+        set_guess_word
       end
     end
 
@@ -31,6 +35,13 @@ module Hangman
       else
         @guesser = player_two.instance_of?(Human) ? player_two : player_one
       end
+    end
+
+    def set_guess_word
+      word = DictionaryList.new
+
+      puts "The word has been set! It is #{word.size} characters long."
+      puts word
     end
   end
 end

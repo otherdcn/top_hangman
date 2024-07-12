@@ -7,6 +7,14 @@ class DictionaryList
     @guess = ""
   end
 
+  def to_s
+    word
+  end
+
+  def size
+    word.size
+  end
+
   private
   def random_word
     filename = "./words/10000-english-words.txt"
@@ -18,7 +26,7 @@ class DictionaryList
 
     dictionary_list_size = words.size
 
-    random_word = words[(rand*dictionary_list_size).floor]
+    random_word = words[(rand*dictionary_list_size).floor].chomp
   end
 end
 
