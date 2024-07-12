@@ -22,5 +22,5 @@ class DictionaryList
   end
 end
 
-w = DictionaryList.new
-puts w.word
+#w = DictionaryList.new
+#puts w.word
