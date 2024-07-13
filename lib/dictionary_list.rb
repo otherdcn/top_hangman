@@ -15,6 +15,10 @@ class DictionaryList
     word.size
   end
 
+  def split(delimiter)
+    word.split(delimiter)
+  end
+
   private
   def random_word
     filename = "./words/10000-english-words.txt"
