@@ -33,12 +33,26 @@ module Hangman
         set_secret_word
         set_reset_values
 
-        8.times do |turn|
-          puts "\n******************** Round #{turn + 1} ********************".black.on_white
+        wrong_guess_counter = 8
+        until wrong_guess_counter.zero?
+          puts "\n==> #{wrong_guess_counter} tries left".black.on_white
 
           puts "Correct guesses: #{correct_letters_guessed.join}"
 
-          guess_secret_word
+          break if correct_letters_guessed.join == secret_word.to_s
+          next if guess_secret_word
+
+          wrong_guess_counter -= 1
+        end
+
+        if wrong_guess_counter.zero?
+          puts "HANGMAN!!!".red
+          puts "Secret Word: #{secret_word}"
+          puts "Your Guess: #{correct_letters_guessed.join}"
+       else
+          puts "You got it!!!".green
+          puts "Secret Word: #{secret_word}"
+          puts "Your Guess: #{correct_letters_guessed.join}"
         end
       end
     end
@@ -99,8 +113,12 @@ module Hangman
         letter_indices.each do |index|
           correct_letters_guessed[index] = guess_letter
         end
+
+        true # Correct guess attempt; do not decrement the wrong_guess_counter variable
       else
         letters_guessed << guess_letter
+
+        false # Wrong guess attempt; decrement the wrong_guess_counter variable
       end
     end
   end

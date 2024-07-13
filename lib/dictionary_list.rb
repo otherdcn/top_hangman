@@ -15,7 +15,7 @@ class DictionaryList
     word.size
   end
 
-  def split(delimiter)
+  def split(delimiter = "")
     word.split(delimiter)
   end
 
