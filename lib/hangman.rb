@@ -5,7 +5,7 @@ require "colorize"
 module Hangman
   class Game
     attr_reader :player_one, :player_two, :guesser
-    attr_accessor :word
+    attr_accessor :secret_word
 
     def initialize(mode = 2, player_one = "Joe", player_two = "Ted")
       @player_one = Human.new(player_one)
@@ -16,7 +16,7 @@ module Hangman
                     end
     end
 
-    def play(rounds = 2)
+    def play(rounds = 1)
       puts "Welcome #{player_one.name} and #{player_two.name}!"
 
       rounds.times do |round|
@@ -25,7 +25,12 @@ module Hangman
         puts "===> Round: #{round + 1}"
         puts "===> Guesser: #{guesser.name}\n\n"
 
-        set_guess_word
+        set_secret_word
+
+        8.times do |turn|
+          puts "\n******************** Round #{turn + 1} ********************".black.on_white
+          guess_secret_word
+        end
       end
     end
 
@@ -37,11 +42,18 @@ module Hangman
       end
     end
 
-    def set_guess_word
-      word = DictionaryList.new
+    def set_secret_word
+      secret_word = DictionaryList.new
 
-      puts "The word has been set! It is #{word.size} characters long."
-      puts word
+      puts "The word has been set! It is #{secret_word.size} characters long."
+      puts secret_word
+    end
+
+    def guess_secret_word
+      print "Enter your guess (only one letter character, all else will be discarded): "
+      guess_letter = gets.chomp[0]
+
+      puts "Your guess: #{guess_letter}"
     end
   end
 end
