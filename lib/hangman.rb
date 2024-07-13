@@ -21,7 +21,7 @@ module Hangman
       self.letters_guessed = []
     end
 
-    def play(rounds = 1)
+    def play(rounds = 2)
       puts "Welcome #{player_one.name} and #{player_two.name}!"
 
       rounds.times do |round|
@@ -37,7 +37,7 @@ module Hangman
         until wrong_guess_counter.zero?
           puts "\n==> #{wrong_guess_counter} tries left".black.on_white
 
-          puts "Correct guesses: #{correct_letters_guessed.join}"
+          puts "Correct guesses: #{correct_letters_guessed.join}\n"
 
           break if correct_letters_guessed.join == secret_word.to_s
           next if guess_secret_word
@@ -45,16 +45,31 @@ module Hangman
           wrong_guess_counter -= 1
         end
 
-        if wrong_guess_counter.zero?
-          puts "HANGMAN!!!".red
-          puts "Secret Word: #{secret_word}"
-          puts "Your Guess: #{correct_letters_guessed.join}"
-       else
-          puts "You got it!!!".green
-          puts "Secret Word: #{secret_word}"
-          puts "Your Guess: #{correct_letters_guessed.join}"
-        end
+      end_round(wrong_guess_counter)
       end
+    end
+
+    def end_round(wrong_guess_counter)
+      if wrong_guess_counter.zero?
+        puts "\nHANGMAN!!!".red
+        puts "Secret Word: #{secret_word}"
+        puts "Your Guess: #{correct_letters_guessed.join}"
+      else
+        puts "\nYou got it!!!".green
+        puts "Secret Word: #{secret_word}"
+        puts "Your Guess: #{correct_letters_guessed.join}"
+      end
+
+      add_guesser_score(wrong_guess_counter)
+
+      puts "SCOREBOARD".center(45).underline
+      [player_one, player_two].each do |player|
+        print player.name.to_s.ljust(15)
+        puts "| #{player.score}"
+      end
+
+      print "\nPress any key to continue..."
+      gets
     end
 
     def set_guesser(round)
@@ -120,6 +135,10 @@ module Hangman
 
         false # Wrong guess attempt; decrement the wrong_guess_counter variable
       end
+    end
+
+    def add_guesser_score(wrong_guess_counter)
+      guesser.score += (wrong_guess_counter) # number of tries left is the score
     end
   end
 end
