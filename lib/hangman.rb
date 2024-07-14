@@ -9,10 +9,10 @@ module Hangman
 
     def initialize(mode = 2, player_one = "Joe", player_two = "Ted")
       @player_one = Human.new(player_one)
-      @player_two = if mode == 1
+      @player_two = if mode == 2 # mode 1 is single player mode
                       Human.new(player_two)
                     else
-                      Computer.new
+                      Computer.new # placeholder for single player mode
                     end
     end
 
@@ -23,6 +23,7 @@ module Hangman
 
     def play(rounds = 2)
       puts "Welcome #{player_one.name} and #{player_two.name}!"
+      puts "\n#{rounds} rounds to play!"
 
       rounds.times do |round|
         puts "\n******************** Round #{round + 1} ********************".black.on_white
@@ -47,7 +48,7 @@ module Hangman
       end_round(wrong_guess_counter)
       end
 
-      announce_winner
+      announce_winner unless player_two.instance_of? Computer # no need to announce winner in single player game mode
     end
 
     def end_round(wrong_guess_counter)
@@ -65,6 +66,7 @@ module Hangman
 
       puts "SCOREBOARD".center(45).underline
       [player_one, player_two].each do |player|
+        next if player.instance_of? Computer # only show player one (human) since its single player mode
         print player.name.to_s.ljust(15)
         puts "| #{player.score}"
       end
@@ -130,12 +132,12 @@ module Hangman
         end
 
         puts "#{guess_letter} is correct!".green
-        true # Correct guess attempt; do not decrement the wrong_guess_counter variable
+        true # correct guess attempt; do not decrement the wrong_guess_counter variable
       else
         letters_guessed << guess_letter
 
         puts "#{guess_letter} is wrong!".red
-        false # Wrong guess attempt; decrement the wrong_guess_counter variable
+        false # wrong guess attempt; decrement the wrong_guess_counter variable
       end
     end
 
@@ -146,12 +148,14 @@ module Hangman
     def announce_winner
       if player_one.score > player_two.score
         puts "Congratulations #{player_one.name}".green
-      else
+      elsif player_one.score < player_two.score
         puts "Congratulations #{player_two.name}".green
+      else
+        puts "Draw".yellow
       end
     end
   end
 end
 
-game = Hangman::Game.new(1)
-game.play
+#game = Hangman::Game.new(2)
+#game.play
