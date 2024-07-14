@@ -37,7 +37,6 @@ module Hangman
         until wrong_guess_counter.zero?
           puts "\n==> #{wrong_guess_counter} tries left".black.on_white
 
-          puts "Correct guesses: #{correct_letters_guessed.join}\n"
 
           break if correct_letters_guessed.join == secret_word.to_s
           next if guess_secret_word
@@ -47,6 +46,8 @@ module Hangman
 
       end_round(wrong_guess_counter)
       end
+
+      announce_winner
     end
 
     def end_round(wrong_guess_counter)
@@ -83,12 +84,12 @@ module Hangman
     def set_secret_word
       self.secret_word = DictionaryList.new
 
-      puts "The word has been set! It is #{secret_word.size} characters long."
-      puts secret_word
+      puts "The secret word has been set! It is #{secret_word.size} characters long.".yellow
     end
 
     def prompt_user_input
-      puts "Incorrect guessed: #{letters_guessed.join(', ')}"
+      puts "Correct guesses: #{correct_letters_guessed.join}"
+      puts "Incorrect guesses: #{letters_guessed.join(', ')}"
       input_validity = false
 
       until input_validity
@@ -106,11 +107,11 @@ module Hangman
       input_already_correct = correct_letters_guessed.include? guess_letter
 
       if input_empty_or_nil_or_not_string
-        puts "Input not a string"
+        puts "Input not a string".yellow
       elsif input_already_guessed
-        puts "Input already guessed"
+        puts "Input already guessed".yellow
       elsif input_already_correct
-        puts "Input already correctly guessed"
+        puts "Input already correctly guessed".yellow
       else
         true
       end
@@ -118,7 +119,6 @@ module Hangman
 
     def guess_secret_word
       guess_letter = prompt_user_input
-      puts "Your guess: #{guess_letter}"
 
       if secret_word.word.include? guess_letter
         secret_word_array = secret_word.split("")
@@ -129,16 +129,26 @@ module Hangman
           correct_letters_guessed[index] = guess_letter
         end
 
+        puts "#{guess_letter} is correct!".green
         true # Correct guess attempt; do not decrement the wrong_guess_counter variable
       else
         letters_guessed << guess_letter
 
+        puts "#{guess_letter} is wrong!".red
         false # Wrong guess attempt; decrement the wrong_guess_counter variable
       end
     end
 
     def add_guesser_score(wrong_guess_counter)
-      guesser.score += (wrong_guess_counter) # number of tries left is the score
+      guesser.score += (wrong_guess_counter) # number of tries left is the score; the higher, the better
+    end
+
+    def announce_winner
+      if player_one.score > player_two.score
+        puts "Congratulations #{player_one.name}".green
+      else
+        puts "Congratulations #{player_two.name}".green
+      end
     end
   end
 end
