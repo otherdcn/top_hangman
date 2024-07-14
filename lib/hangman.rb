@@ -96,7 +96,7 @@ module Hangman
 
       until input_validity
         print "Enter your guess (only one letter character, all else will be discarded): "
-        guess_letter = gets.chomp[0]
+        guess_letter = gets.chomp[0].downcase
         input_validity = validate_letter_input(guess_letter)
       end
 
