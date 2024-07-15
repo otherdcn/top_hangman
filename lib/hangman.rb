@@ -55,17 +55,15 @@ module Hangman
 
           break if correct_letters_guessed.join == secret_word.to_s
 
+          wrong_guess_counter -= 1 unless guess_secret_word
+
           print "Do you want to rest and save the game (y/n): "
           save_game_prompt_response = gets.chomp[0]
 
           if save_game_prompt_response == "y"
             save_game([all_rounds, round], wrong_guess_counter, 2)
 
-            return "Gave saved and ended"
-          else
-            next if guess_secret_word
-
-            wrong_guess_counter -= 1
+            return "Game saved and ended"
           end
         end
 
@@ -79,7 +77,6 @@ module Hangman
 
       announce_winner unless player_two.instance_of? Computer # no need to announce winner in single player game mode
       # Once all rounds have been played and game is over from loaded savepoint; delete savepoint
-      puts "Delete savepoint: #{delete_save_points}"
       FileUtils.rm_rf "saves/" if delete_save_points
     end
 
