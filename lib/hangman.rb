@@ -1,11 +1,14 @@
 require_relative "dictionary_list"
 require_relative "player"
 require "colorize"
+require "yaml"
+require "json"
 
 module Hangman
   class Game
     attr_reader :player_one, :player_two, :guesser
     attr_accessor :secret_word, :correct_letters_guessed, :letters_guessed
+    @@serializers = [JSON, YAML, Marshal]
 
     def initialize(mode = 2, player_one = "Joe", player_two = "Ted")
       @player_one = Human.new(player_one)
@@ -39,9 +42,19 @@ module Hangman
           puts "\n==> #{wrong_guess_counter} tries left".black.on_white
 
           break if correct_letters_guessed.join == secret_word.to_s
-          next if guess_secret_word
 
-          wrong_guess_counter -= 1
+          print "Do you want to rest and save the game (y/n): "
+          save_game_prompt_response = gets.chomp[0]
+
+          if save_game_prompt_response == "y"
+            save_game([rounds, round], wrong_guess_counter, 2)
+
+            return "Gave saved and ended"
+          else
+            next if guess_secret_word
+
+            wrong_guess_counter -= 1
+          end
         end
 
         end_round(wrong_guess_counter)
@@ -96,8 +109,12 @@ module Hangman
 
       until input_validity
         print "Enter your guess (only one letter character, all else will be discarded): "
-        guess_letter = gets.chomp[0].downcase
-        input_validity = validate_letter_input(guess_letter)
+        begin
+          guess_letter = gets.chomp[0].downcase
+          input_validity = validate_letter_input(guess_letter)
+        rescue NoMethodError # exception handling of calling downcase on nil "guess_letter"
+          puts "Input empty; please type something...".yellow
+        end
       end
 
       guess_letter
@@ -156,8 +173,25 @@ module Hangman
         puts "Draw".yellow
       end
     end
+
+    def save_game(game_rounds, wrong_guess_counter, format = 1)
+      game_properties = [player_one, player_two, guesser.name, secret_word, correct_letters_guessed, letters_guessed, game_rounds, wrong_guess_counter]
+      serialize_format = @@serializers[format]
+
+      puts "Serializing using #{serialize_format.name} format..."
+
+      save_dump = serialize_format.dump game_properties
+
+      save_dump_file = "saves/game-#{serialize_format.name.downcase}.save"
+
+      puts "Saving to file #{save_dump_file}"
+
+      File.open(save_dump_file, "w") do |file|
+        file.write save_dump
+      end
+    end
   end
 end
 
-# game = Hangman::Game.new(2)
-# game.play
+#game = Hangman::Game.new(2)
+#game.play
