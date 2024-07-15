@@ -2,14 +2,14 @@ class Player
   attr_reader :name
   attr_accessor :score
 
-  def initialize(name)
+  def initialize(name, score = 0)
     @name = name
-    @score = 0
+    @score = score
   end
 end
 
 class Human < Player
-  def initialize(name = "Human Joe")
+  def initialize(name = "Human Joe", score = 0)
     super
   end
 end
@@ -17,7 +17,7 @@ end
 class Computer < Player
   attr_reader :name, :code
 
-  def initialize(name = "Computer Carl")
+  def initialize(name = "Computer Carl", score = 0)
     super
   end
 end

@@ -3,17 +3,18 @@ require_relative "player"
 require "colorize"
 require "yaml"
 require "json"
+require 'fileutils'
 
 module Hangman
   class Game
     attr_reader :player_one, :player_two, :guesser
-    attr_accessor :secret_word, :correct_letters_guessed, :letters_guessed
+    attr_accessor :guesser, :secret_word, :correct_letters_guessed, :letters_guessed
     @@serializers = [JSON, YAML, Marshal]
 
-    def initialize(mode = 2, player_one = "Joe", player_two = "Ted")
-      @player_one = Human.new(player_one)
+    def initialize(mode = 2, player_one = {name: "Joe", score: 0}, player_two = {name: "Ted", score: 0})
+      @player_one = Human.new(player_one[:name], player_one[:score])
       @player_two = if mode == 2 # mode 1 is single player mode
-                      Human.new(player_two)
+                      Human.new(player_two[:name], player_two[:score])
                     else
                       Computer.new # placeholder for single player mode
                     end
@@ -24,20 +25,31 @@ module Hangman
       self.letters_guessed = []
     end
 
-    def play(rounds = 2)
-      puts "Welcome #{player_one.name} and #{player_two.name}!"
-      puts "\n#{rounds} rounds to play!"
+    def play(rounds, wrong_guess_counter = nil, continue_from_save = false)
+      all_rounds, current_round = rounds
+      delete_save_points = continue_from_save # flag to delete files if game is over from loaded savepoint
 
-      rounds.times do |round|
-        puts "\n******************** Round #{round + 1} ********************".black.on_white
+      unless continue_from_save
+        puts "Welcome #{player_one.name} and #{player_two.name}!"
+        puts "\n#{all_rounds} rounds to play!"
+      else
+        puts "Welcome Back, #{player_one.name} and #{player_two.name}!"
+        puts "\nLet's jump in from where you last left off..."
+        puts "We're continuing from round #{current_round}" if continue_from_save # if we're loading a saved game
+      end
+
+      current_round.upto(all_rounds) do |round|
+        puts "\n******************** Round #{round} ********************".black.on_white
         set_guesser(round)
-        puts "===> Round: #{round + 1}"
+        puts "===> Round: #{round}"
         puts "===> Guesser: #{guesser.name}\n\n"
 
-        set_secret_word
-        set_reset_values
+        unless continue_from_save
+          set_secret_word
+          set_reset_values
+          wrong_guess_counter = 8
+        end
 
-        wrong_guess_counter = 8
         until wrong_guess_counter.zero?
           puts "\n==> #{wrong_guess_counter} tries left".black.on_white
 
@@ -47,7 +59,7 @@ module Hangman
           save_game_prompt_response = gets.chomp[0]
 
           if save_game_prompt_response == "y"
-            save_game([rounds, round], wrong_guess_counter, 2)
+            save_game([all_rounds, round], wrong_guess_counter, 2)
 
             return "Gave saved and ended"
           else
@@ -57,10 +69,18 @@ module Hangman
           end
         end
 
+        # If the current method (play) was called with the
+        # continue_from_save flag argument set to true, then
+        # we ensure to set the flag to false so new properties
+        # can be set for new round after completing current round.
+        continue_from_save = false
         end_round(wrong_guess_counter)
       end
 
       announce_winner unless player_two.instance_of? Computer # no need to announce winner in single player game mode
+      # Once all rounds have been played and game is over from loaded savepoint; delete savepoint
+      puts "Delete savepoint: #{delete_save_points}"
+      FileUtils.rm_rf "saves/" if delete_save_points
     end
 
     def end_round(wrong_guess_counter)
@@ -89,7 +109,7 @@ module Hangman
     end
 
     def set_guesser(round)
-      @guesser = if round.even?
+      @guesser = if round.odd?
                    player_one
                  else
                    player_two.instance_of?(Human) ? player_two : player_one
@@ -182,7 +202,11 @@ module Hangman
 
       save_dump = serialize_format.dump game_properties
 
-      save_dump_file = "saves/game-#{serialize_format.name.downcase}.save"
+      directory = "saves"
+
+      Dir.mkdir(directory) unless Dir.exist?(directory)
+
+      save_dump_file = "#{directory}/game-#{serialize_format.name.downcase}.save"
 
       puts "Saving to file #{save_dump_file}"
 
@@ -190,8 +214,57 @@ module Hangman
         file.write save_dump
       end
     end
+
+    def self.load_game(format = 2)
+      serialize_format = @@serializers[format]
+
+      save_dump_file = "saves/game-#{serialize_format.name.downcase}.save"
+
+      string = File.read(save_dump_file)
+
+      game_properties = serialize_format.load(string)
+
+      player_one = game_properties[0]
+      player_two = game_properties[1]
+      guesser = if game_properties[2] == player_one.name
+                  player_one
+                else
+                  player_two
+                end
+      secret_word = game_properties[3]
+      correct_letters_guessed = game_properties[4]
+      letters_guessed = game_properties[5]
+      rounds = game_properties[6]
+      wrong_guess_counter = game_properties[7]
+
+      game_mode = player_two.instance_of?(Computer) ? 1 : 2
+      puts "Playing in game mode #{game_mode}"
+
+      [
+        Hangman::Game.new(game_mode, {name: player_one.name, score: player_one.score}, {name: player_two.name, score: player_two.score}),
+        guesser,
+        secret_word,
+        correct_letters_guessed,
+        letters_guessed,
+        rounds,
+        wrong_guess_counter
+      ]
+    end
   end
 end
 
-#game = Hangman::Game.new(2)
-#game.play
+=begin
+game = Hangman::Game.new(2)
+game.play([2,1])
+=end
+
+=begin
+game, guesser, secret_word, correct_letters_guessed, letters_guessed, rounds, wrong_guess_counter = Hangman::Game.load_game
+
+game.guesser = guesser
+game.secret_word = secret_word
+game.correct_letters_guessed = correct_letters_guessed
+game.letters_guessed = letters_guessed
+
+game.play(rounds, wrong_guess_counter, true)
+=end
