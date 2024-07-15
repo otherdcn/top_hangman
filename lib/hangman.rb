@@ -38,14 +38,13 @@ module Hangman
         until wrong_guess_counter.zero?
           puts "\n==> #{wrong_guess_counter} tries left".black.on_white
 
-
           break if correct_letters_guessed.join == secret_word.to_s
           next if guess_secret_word
 
           wrong_guess_counter -= 1
         end
 
-      end_round(wrong_guess_counter)
+        end_round(wrong_guess_counter)
       end
 
       announce_winner unless player_two.instance_of? Computer # no need to announce winner in single player game mode
@@ -67,6 +66,7 @@ module Hangman
       puts "SCOREBOARD".center(45).underline
       [player_one, player_two].each do |player|
         next if player.instance_of? Computer # only show player one (human) since its single player mode
+
         print player.name.to_s.ljust(15)
         puts "| #{player.score}"
       end
@@ -104,7 +104,9 @@ module Hangman
     end
 
     def validate_letter_input(guess_letter)
-      input_empty_or_nil_or_not_string = guess_letter.nil? || guess_letter.empty? || !(guess_letter.ord.between?(65,122))
+      input_empty_or_nil_or_not_string = guess_letter.nil? ||
+                                         guess_letter.empty? ||
+                                         !guess_letter.ord.between?(65, 122)
       input_already_guessed = letters_guessed.include? guess_letter
       input_already_correct = correct_letters_guessed.include? guess_letter
 
@@ -142,7 +144,7 @@ module Hangman
     end
 
     def add_guesser_score(wrong_guess_counter)
-      guesser.score += (wrong_guess_counter) # number of tries left is the score; the higher, the better
+      guesser.score += wrong_guess_counter # number of tries left is the score; the higher, the better
     end
 
     def announce_winner
@@ -157,5 +159,5 @@ module Hangman
   end
 end
 
-#game = Hangman::Game.new(2)
-#game.play
+# game = Hangman::Game.new(2)
+# game.play
